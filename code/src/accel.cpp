@@ -11,6 +11,7 @@ bool Accel::start( TwoWire &I2CBus, int address )
     if( this -> mpu.begin_I2C( address, &I2CBus ) )
     { 
         this -> mpu.setRange( LIS331HH_RANGE_24_G );
+		this -> mpu.setDataRate(LIS331_DATARATE_1000_HZ);
         return 1;
     }
 
@@ -30,10 +31,11 @@ float Accel::getAccel()
     mpu.getEvent( &event );
 
     accelMag = 
-        sqrt( 
-            pow( event.acceleration.y - offsety, 2 ) +
-            pow( event.acceleration.x - offsetx, 2 ) 
+        hypot( 
+             event.acceleration.x - offsetx,
+            event.acceleration.y - offsety
         );
+
     return accelMag;
 
 }

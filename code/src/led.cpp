@@ -1,50 +1,55 @@
 #include <Arduino.h>
 #include "led.h"
+#include <cmath>
 
-LED::LED( int ledPinIn, int numPixlesIn )
+LED::LED( int ledPinIn )
 {
     //set object variables
     this -> ledPin = ledPinIn;
-    this -> numPixles = numPixlesIn;
-
-    //create the object and begin
-    pixles = new Adafruit_NeoPixel( this -> numPixles, this -> ledPin, NEO_GRB + NEO_KHZ800);
-    pixles -> begin();
+    pinMode( this -> ledPin, OUTPUT );
 }
 
 
 //the robot is stopped with no errors
 void LED::stopped() 
 {
-    //makes sure there is delay
-    if( ( lastTime - millis() ) >= 1000 )
+    digitalWrite( this -> ledPin, HIGH );
+}
+
+void LED::onLoop( float angle )
+{
+    if( angle > PI / 2 && angle < ( 5 * PI ) / 6  )
     {
-        //set the pixles
-        pixles -> clear();
+        digitalWrite( this -> ledPin, HIGH );
+    }
+    else
+    {
+        digitalWrite( this -> ledPin, LOW );
+    }
+}
 
-        //if we are turning on the lights, set it to green
-        if( increasing )
+//shows any errors found
+void LED::error()
+{
+    //time since last check
+    int deltaTime = millis() - this -> lastTime;
+
+    //blinks the LED every half second
+    if( deltaTime >= 500 )
+    {
+        //switches LED on or off
+        if( !errorOn )
         {
-            pixles -> setPixelColor( currentLED, pixles -> Color( 0, 150, 0 ) );
+            digitalWrite( this -> ledPin, HIGH );
         }
         else
         {
-            pixles -> setPixelColor( currentLED, pixles -> Color( 0, 0, 0 ) );
+            digitalWrite( this -> ledPin, LOW );
         }
 
-        pixles -> show();
+        //reverses LED on or off and sets current time
+        errorOn = !errorOn;
         lastTime = millis();
-
-        //increase the led count
-        if( currentLED >= numPixles )
-        {
-            currentLED++;
-        }
-        else
-        {
-            currentLED = 0;
-            increasing = !increasing;
-        }
     }
 }
 

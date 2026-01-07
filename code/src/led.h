@@ -9,7 +9,7 @@ class LED
     public:
 
     //begin communication with the LED strip
-    LED( int ledPinIn, int numPixlesIn );
+    LED( int ledPinIn );
 
     //the robot is stopped with no errors
     void stopped();
@@ -28,13 +28,11 @@ class LED
 
     //variables for the LEDC communication
     int ledPin;
-    int numPixles;
 
     int currentLED = 0;
     int lastTime = 0;
     bool increasing = 1;
-
-    Adafruit_NeoPixel *pixles;
+    bool errorOn = 0;
 };
 
 #endif
