@@ -26,12 +26,17 @@ TwoWire I2CBus = TwoWire( 0 );
 ///////////////////////////////ONE IS A PLACEHOLDER HERE, REPLACE LATER!!!!!
 kinimatics kine( 1 );
 
+//heading LED objects
+LED header1( 9 );//, 5 );
+LED header2( 8 );//, 5 );
+
 //otaUpdate object
 OTAUpdates OTA;
+bool wifiEnabled = 0;
 
-//heading LED objects
-LED header1( 9, 5 );
-LED header2( 8, 5 );
+//the second loop, used for multithreading
+void loop2( void *pvParameters );
+
 
 void setup() 
 {
@@ -45,9 +50,23 @@ void setup()
     motor1.setSpeed( 0 );
     motor2.setSpeed( 0 );
 
-    while( controller.input.throttle != -1 )
+        xTaskCreatePinnedToCore
+    (
+        loop2,
+        "Loop2",
+        1000,
+        NULL,
+        10,
+        NULL,
+        0
+    );
+
+    // Load persisted kinimatics tuning values after filesystem is mounted
+    kine.loadValues();
+
+    while( controller.input.throttle > -0.9 )
     {
-        delay( 1000 );
+        delay( 100 );
     }
 }
 
@@ -60,7 +79,6 @@ void loop()
     float stickAngle;
 
     //code that has to run every update
-    controller.loop();
     OTA.loop();
 
     //tank drive mode
@@ -103,4 +121,25 @@ void loop()
         motor1.setSpeed( motorSpeeds[0] );
         motor2.setSpeed( motorSpeeds[1] );
     }
+}
+
+void loop2( void *pvParameters )
+{
+    while( 1 )
+    {
+        controller.loop();
+            //find the radial acceleration of both acceleromiters
+        accel1Mag = accel1.getAccel();
+        accel2Mag = accel2.getAccel();
+
+        //find the current angle based on the two accelerations
+        currentAngle = kine.findAngle( accel1Mag, accel2Mag );
+
+        if( controller.input.throttle > -0.8 )
+        {
+            //update the heading LED
+            header1.onLoop( currentAngle );
+        }
+    }
+
 }
